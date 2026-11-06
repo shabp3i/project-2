@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quán Net AI - Bảng Điều Khiển Quản Trị</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginSection" class="flex-1 flex items-center justify-center p-4">
+    <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl border border-slate-800">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-xl font-bold shadow-lg shadow-indigo-500/30">
+          ⚡
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Quán Net AI</h1>
+          <p class="text-xs text-slate-400">Gateway & Quản lý Token Truy cập</p>
+        </div>
+      </div>
+
+      <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Mật Khẩu Quản Trị (ADMIN_PASSWORD)</label>
+          <input type="password" id="adminPassword" required placeholder="Nhập mật khẩu admin..."
+                 class="w-full px-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+        </div>
+        <div id="loginError" class="hidden text-xs text-rose-400 bg-rose-950/40 border border-rose-900/60 p-2.5 rounded-lg"></div>
+        <button type="submit" id="loginBtn"
+                class="w-full py-2.5 px-4 rounded-xl font-medium bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/30 transition transform active:scale-98">
+          Đăng Nhập Quản Trị
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD MAIN -->
+  <div id="dashboardSection" class="hidden flex-1 flex flex-col">
+    <!-- Navbar -->
+    <header class="glass sticky top-0 z-30 border-b border-slate-800/80 px-6 py-3.5">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-lg font-bold shadow-md shadow-indigo-500/20">
+            ⚡
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-base text-white tracking-wide">Quán Net AI</span>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium">Gateway Admin</span>
+            </div>
+            <p class="text-[11px] text-slate-400">OpenCode & Colab llama.cpp Credit Billing</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <div id="upstreamStatusBadge" class="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="statusDot"></span>
+            <span id="statusText" class="text-slate-300">Đang kiểm tra Colab...</span>
+          </div>
+
+          <button onclick="handleLogout()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-300 transition">
+            Đăng Xuất
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+      <!-- STATS OVERVIEW CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass p-4 rounded-xl border border-slate-800/80">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tổng Hội Viên</div>
+          <div class="text-2xl font-bold text-white mt-1" id="statTotalUsers">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Tài khoản đã tạo</div>
+        </div>
+        <div class="glass p-4 rounded-xl border border-slate-800/80">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Đang Hoạt Động</div>
+          <div class="text-2xl font-bold text-emerald-400 mt-1" id="statActiveUsers">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Không bị khoá</div>
+        </div>
+        <div class="glass p-4 rounded-xl border border-slate-800/80">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Token Lưu Hành</div>
+          <div class="text-2xl font-bold text-amber-400 mt-1" id="statCirculatingTokens">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Tổng số dư hội viên</div>
+        </div>
+        <div class="glass p-4 rounded-xl border border-slate-800/80">
+          <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">Đã Tiêu Thụ</div>
+          <div class="text-2xl font-bold text-indigo-400 mt-1" id="statTotalTokensUsed">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Tổng token đã dùng</div>
+        </div>
+      </div>
+
+      <!-- TABS NAVIGATION -->
+      <div class="border-b border-slate-800 flex space-x-6 text-sm font-medium">
+        <button onclick="switchTab('users')" id="tabBtnUsers" class="pb-3 border-b-2 border-indigo-500 text-indigo-400 flex items-center space-x-2">
+          <span>👥 Quản Lý Hội Viên</span>
+        </button>
+        <button onclick="switchTab('upstream')" id="tabBtnUpstream" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+          <span>⚙️ Cấu Hình Upstream (Colab Ngrok)</span>
+        </button>
+        <button onclick="switchTab('logs')" id="tabBtnLogs" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+          <span>📜 Nhật Ký Request</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: USERS MANAGEMENT -->
+      <section id="tabUsers" class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="relative flex-1 max-w-md">
+            <input type="text" id="userSearchInput" oninput="filterUsers()" placeholder="Tìm theo tên hội viên..."
+                   class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm placeholder-slate-500 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">🔍</span>
+          </div>
+
+          <button onclick="openCreateUserModal()"
+                  class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20 transition">
+            <span>+ Tạo User Mới</span>
+          </button>
+        </div>
+
+        <!-- Users Table -->
+        <div class="glass rounded-xl overflow-hidden border border-slate-800/80">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/80 text-slate-400 border-b border-slate-800 uppercase text-[10px] tracking-wider font-semibold">
+                <tr>
+                  <th class="py-3 px-4">Tên Hội Viên</th>
+                  <th class="py-3 px-4">API Key Riêng</th>
+                  <th class="py-3 px-4 text-right">Số Dư Token</th>
+                  <th class="py-3 px-4 text-right">Tổng Đã Dùng</th>
+                  <th class="py-3 px-4 text-center">Trạng Thái</th>
+                  <th class="py-3 px-4">Hoạt Động Cuối</th>
+                  <th class="py-3 px-4 text-center">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody" class="divide-y divide-slate-800/60 text-slate-200">
+                <tr>
+                  <td colspan="7" class="py-8 text-center text-slate-500">Đang tải dữ liệu hội viên...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: UPSTREAM CONFIGURATION -->
+      <section id="tabUpstream" class="hidden space-y-6">
+        <div class="glass p-6 rounded-2xl border border-slate-800/80 max-w-2xl space-y-6">
+          <div>
+            <h2 class="text-base font-bold text-white">Cấu Hình Kết Nối Backend (Upstream)</h2>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              Domain tĩnh ngrok trỏ về llama.cpp server đang chạy trên Google Colab.
+              Bạn có thể cập nhật địa chỉ này trực tiếp bất kỳ lúc nào mà <strong class="text-indigo-300">không cần restart gateway</strong>.
+            </p>
+          </div>
+
+          <form id="upstreamForm" onsubmit="saveUpstreamSettings(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                Upstream Base URL (domain ngrok)
+              </label>
+              <input type="url" id="inputUpstreamUrl" required
+                     placeholder="https://ten-cua-ban.ngrok-free.app/v1"
+                     class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <span class="text-[11px] text-slate-500 mt-1 block">Ví dụ: https://my-llama.ngrok-free.app/v1 (có /v1 ở cuối)</span>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                Upstream API Key (Nếu có)
+              </label>
+              <input type="text" id="inputUpstreamKey"
+                     placeholder="Để trống nếu llama.cpp không bật --api-key"
+                     class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div class="flex items-center space-x-3 pt-2">
+              <button type="submit" id="btnSaveUpstream"
+                      class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition shadow-md shadow-indigo-600/20">
+                Lưu Cấu Hình
+              </button>
+              <button type="button" onclick="testUpstreamConnection()" id="btnTestUpstream"
+                      class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium border border-slate-700 transition">
+                ⚡ Kiểm Tra Kết Nối Colab
+              </button>
+            </div>
+          </form>
+
+          <!-- Test Result Box -->
+          <div id="testResultBox" class="hidden p-4 rounded-xl text-xs space-y-1.5"></div>
+
+          <!-- Quick Colab Guide -->
+          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 text-xs text-slate-400 space-y-2">
+            <div class="font-semibold text-slate-300">💡 Gợi ý lệnh chạy llama.cpp server trên Colab kèm ngrok:</div>
+            <pre class="bg-slate-950 p-2.5 rounded-lg text-emerald-400 font-mono text-[11px] overflow-x-auto">
+# Chạy llama.cpp server trên port 8080:
+./llama-server -m model.gguf -c 4096 --port 8080 --host 0.0.0.0
+
+# Mở ngrok domain tĩnh miễn phí trỏ tới port 8080:
+ngrok http 8080 --domain=ten-domain-cua-toi.ngrok-free.app</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: REQUEST LOGS -->
+      <section id="tabLogs" class="hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-white">Nhật Ký Request Gần Đây</h2>
+            <p class="text-[11px] text-slate-400">Chỉ lưu thời gian, số token và mã phản hồi. Không lưu nội dung chat để bảo vệ quyền riêng tư.</p>
+          </div>
+          <button onclick="loadLogs()" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 transition">
+            🔄 Làm Mới
+          </button>
+        </div>
+
+        <div class="glass rounded-xl overflow-hidden border border-slate-800/80">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/80 text-slate-400 border-b border-slate-800 uppercase text-[10px] tracking-wider font-semibold">
+                <tr>
+                  <th class="py-3 px-4">Thời Gian</th>
+                  <th class="py-3 px-4">Hội Viên</th>
+                  <th class="py-3 px-4">Model</th>
+                  <th class="py-3 px-4 text-right">Prompt Tokens</th>
+                  <th class="py-3 px-4 text-right">Completion Tokens</th>
+                  <th class="py-3 px-4 text-right">Tổng Tokens Trừ</th>
+                  <th class="py-3 px-4 text-center">Status</th>
+                  <th class="py-3 px-4 text-right">Độ Trễ</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody" class="divide-y divide-slate-800/60 text-slate-300 font-mono text-[11px]">
+                <tr>
+                  <td colspan="8" class="py-8 text-center text-slate-500 font-sans text-xs">Chưa có request nào được ghi nhận.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: TẠO USER MỚI -->
+  <div id="modalCreateUser" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass w-full max-w-md p-6 rounded-2xl border border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-white text-base">Thêm Hội Viên Mới</h3>
+        <button onclick="closeModal('modalCreateUser')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <form onsubmit="handleCreateUser(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Tên Hội Viên (Username)</label>
+          <input type="text" id="newUsername" required placeholder="Ví dụ: Nam_AI, Hung_Dev..."
+                 class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <span class="text-[11px] text-slate-500 mt-1 block">Tài khoản mới tạo sẽ có số dư ban đầu là 0 token.</span>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeModal('modalCreateUser')"
+                  class="px-4 py-2 rounded-xl text-xs bg-slate-800 hover:bg-slate-700 text-slate-300">
+            Huỷ
+          </button>
+          <button type="submit"
+                  class="px-5 py-2 rounded-xl text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20">
+            Tạo & Sinh Key
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: KẾT QUẢ TẠO USER (HIỆN KEY ĐỂ COPY) -->
+  <div id="modalKeySuccess" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass w-full max-w-lg p-6 rounded-2xl border border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center space-x-2 text-emerald-400">
+        <span class="text-xl">✅</span>
+        <h3 class="font-bold text-white text-base">Đã Tạo Hội Viên Thành Công!</h3>
+      </div>
+
+      <p class="text-xs text-slate-300">
+        Dưới đây là <strong>API Key riêng</strong> của hội viên <span id="successUsername" class="text-indigo-400 font-bold"></span>.
+        Hãy copy gửi cho bạn của bạn để dán vào file <code class="text-amber-400 bg-slate-900 px-1 py-0.5 rounded">opencode.json</code>.
+      </p>
+
+      <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between space-x-2">
+        <code id="successKeyText" class="font-mono text-emerald-400 text-xs break-all"></code>
+        <button onclick="copyToClipboard(document.getElementById('successKeyText').innerText)"
+                class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shrink-0">
+          📋 Copy Key
+        </button>
+      </div>
+
+      <div class="text-[11px] text-slate-500 bg-slate-950/40 p-3 rounded-lg border border-slate-900">
+        💡 <strong>Bước tiếp theo:</strong> Sau khi nhận tiền nạp ngoài đời từ bạn này, hãy bấm nút "Nạp Token" để cộng số dư cho họ bắt đầu dùng!
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button onclick="closeModal('modalKeySuccess')"
+                class="px-5 py-2 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-white">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NẠP TOKEN (TOP-UP) -->
+  <div id="modalTopup" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass w-full max-w-md p-6 rounded-2xl border border-slate-800 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-white text-base">Nạp Token Cho Hội Viên</h3>
+        <button onclick="closeModal('modalTopup')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="text-xs text-slate-400">Hội viên:</div>
+          <div id="topupTargetUsername" class="font-bold text-white text-sm"></div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-slate-400">Số dư hiện tại:</div>
+          <div id="topupCurrentBalance" class="font-bold text-amber-400 text-sm"></div>
+        </div>
+      </div>
+
+      <form onsubmit="handleTopupSubmit(event)" class="space-y-4">
+        <input type="hidden" id="topupUserId">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Chọn nhanh mức nạp:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="setTopupAmount(100000)" class="py-2 px-3 rounded-lg bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 hover:border-indigo-500 text-xs text-slate-200 transition">
+              + 100,000 token
+            </button>
+            <button type="button" onclick="setTopupAmount(500000)" class="py-2 px-3 rounded-lg bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 hover:border-indigo-500 text-xs text-slate-200 transition">
+              + 500,000 token
+            </button>
+            <button type="button" onclick="setTopupAmount(1000000)" class="py-2 px-3 rounded-lg bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 hover:border-indigo-500 text-xs text-slate-200 transition">
+              + 1,000,000 token
+            </button>
+            <button type="button" onclick="setTopupAmount(2000000)" class="py-2 px-3 rounded-lg bg-slate-900 hover:bg-indigo-600/30 border border-slate-800 hover:border-indigo-500 text-xs text-slate-200 transition">
+              + 2,000,000 token
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Hoặc nhập số token muốn cộng:</label>
+          <input type="number" id="topupAmountInput" required min="1000" step="1000"
+                 placeholder="Ví dụ: 300000" oninput="updateTopupPreview()"
+                 class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="bg-indigo-950/30 border border-indigo-900/50 p-3 rounded-xl flex items-center justify-between text-xs">
+          <span class="text-slate-400">Số dư sau khi nạp:</span>
+          <span id="topupPreviewBalance" class="font-bold text-emerald-400 text-sm">--</span>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeModal('modalTopup')"
+                  class="px-4 py-2 rounded-xl text-xs bg-slate-800 hover:bg-slate-700 text-slate-300">
+            Huỷ
+          </button>
+          <button type="submit"
+                  class="px-5 py-2 rounded-xl text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20">
+            Xác Nhận Nạp Token
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 glass px-4 py-3 rounded-xl border border-slate-700 shadow-2xl flex items-center space-x-2 text-xs transition transform"></div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    let currentUsers = [];
+    let currentSelectedUser = null;
+
+    // Toast helper
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const isSuccess = type === 'success';
+      toast.className = `fixed bottom-5 right-5 z-50 glass px-4 py-3 rounded-xl border ${isSuccess ? 'border-emerald-500 text-emerald-300' : 'border-rose-500 text-rose-300'} shadow-2xl flex items-center space-x-2 text-xs`;
+      toast.innerHTML = `<span>${isSuccess ? '✅' : '⚠️'}</span><span>${msg}</span>`;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Đã copy vào bộ nhớ tạm!");
+      }).catch(() => {
+        showToast("Không thể copy, vui lòng copy thủ công", "error");
+      });
+    }
+
+    // Modal helpers
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // Tab switching
+    function switchTab(tab) {
+      ['users', 'upstream', 'logs'].forEach(t => {
+        const section = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (t === tab) {
+          section.classList.remove('hidden');
+          btn.className = "pb-3 border-b-2 border-indigo-500 text-indigo-400 flex items-center space-x-2 font-medium";
+        } else {
+          section.classList.add('hidden');
+          btn.className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 font-medium";
+        }
+      });
+      if (tab === 'logs') loadLogs();
+      if (tab === 'upstream') loadUpstreamSettings();
+    }
+
+    // Auth & Init
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/admin/me');
+        if (res.ok) {
+          document.getElementById('loginSection').classList.add('hidden');
+          document.getElementById('dashboardSection').classList.remove('hidden');
+          loadDashboard();
+        } else {
+          document.getElementById('loginSection').classList.remove('hidden');
+          document.getElementById('dashboardSection').classList.add('hidden');
+        }
+      } catch (e) {
+        document.getElementById('loginSection').classList.remove('hidden');
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('adminPassword').value;
+      const errBox = document.getElementById('loginError');
+      errBox.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('loginSection').classList.add('hidden');
+          document.getElementById('dashboardSection').classList.remove('hidden');
+          loadDashboard();
+        } else {
+          errBox.innerText = data.detail || 'Mật khẩu sai!';
+          errBox.classList.remove('hidden');
+        }
+      } catch (err) {
+        errBox.innerText = 'Lỗi kết nối tới Gateway!';
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    async function handleLogout() {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      location.reload();
+    }
+
+    // Dashboard Data
+    async function loadDashboard() {
+      loadStats();
+      loadUsers();
+      checkUpstreamQuick();
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/admin/stats');
+        if (res.ok) {
+          const s = await res.json();
+          document.getElementById('statTotalUsers').innerText = s.total_users;
+          document.getElementById('statActiveUsers').innerText = s.active_users;
+          document.getElementById('statCirculatingTokens').innerText = s.circulating_tokens.toLocaleString();
+          document.getElementById('statTotalTokensUsed').innerText = s.total_tokens_used.toLocaleString();
+        }
+      } catch (e) {}
+    }
+
+    // Users
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/admin/users');
+        if (res.ok) {
+          currentUsers = await res.json();
+          renderUsers(currentUsers);
+        }
+      } catch (e) {}
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTableBody');
+      if (!users || users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">Chưa có hội viên nào. Bấm nút "+ Tạo User Mới" để thêm!</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => {
+        const isSuspended = u.status === 'suspended';
+        const isOutOfTokens = u.token_balance <= 0;
+        let balanceClass = 'text-emerald-400';
+        if (isOutOfTokens) balanceClass = 'text-rose-400 font-bold';
+        else if (u.token_balance < 100000) balanceClass = 'text-amber-400';
+
+        const maskedKey = u.api_key.substring(0, 12) + '••••••••••••••••';
+
+        return `
+          <tr class="hover:bg-slate-900/40 transition">
+            <td class="py-3 px-4 font-semibold text-white">
+              ${escapeHtml(u.username)}
+            </td>
+            <td class="py-3 px-4 font-mono text-[11px]">
+              <div class="flex items-center space-x-1.5">
+                <span id="keyDisplay_${u.id}" class="text-slate-400">${maskedKey}</span>
+                <button onclick="toggleKeyVisibility(${u.id}, '${u.api_key}')" class="text-slate-500 hover:text-slate-300 p-1" title="Hiện / Ẩn key">
+                  👁️
+                </button>
+                <button onclick="copyToClipboard('${u.api_key}')" class="text-indigo-400 hover:text-indigo-300 p-1" title="Copy key">
+                  📋
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-right ${balanceClass} font-mono">
+              ${u.token_balance.toLocaleString()}
+            </td>
+            <td class="py-3 px-4 text-right text-slate-400 font-mono">
+              ${u.lifetime_tokens_used.toLocaleString()}
+            </td>
+            <td class="py-3 px-4 text-center">
+              ${isSuspended ?
+                `<span class="px-2 py-0.5 rounded-full bg-rose-950/60 text-rose-400 border border-rose-900/60 text-[10px]">Tạm khoá</span>` :
+                (isOutOfTokens ?
+                  `<span class="px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-400 border border-amber-900/60 text-[10px]">Hết token</span>` :
+                  `<span class="px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-900/60 text-[10px]">Hoạt động</span>`
+                )
+              }
+            </td>
+            <td class="py-3 px-4 text-slate-400 text-[11px]">
+              ${u.last_active_at ? u.last_active_at : 'Chưa dùng'}
+            </td>
+            <td class="py-3 px-4 text-center">
+              <div class="flex items-center justify-center space-x-2">
+                <button onclick="openTopupModal(${u.id})" class="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 font-medium transition" title="Cộng token">
+                  + Nạp Token
+                </button>
+                <button onclick="toggleUserStatus(${u.id}, '${u.status}')" class="px-2.5 py-1 rounded-lg ${isSuspended ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'} border hover:bg-slate-700 transition" title="Khoá / Mở">
+                  ${isSuspended ? 'Mở lại' : 'Khoá'}
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function toggleKeyVisibility(id, fullKey) {
+      const el = document.getElementById(`keyDisplay_${id}`);
+      if (el.innerText.includes('••••')) {
+        el.innerText = fullKey;
+        el.className = "text-indigo-300";
+      } else {
+        el.innerText = fullKey.substring(0, 12) + '••••••••••••••••';
+        el.className = "text-slate-400";
+      }
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('userSearchInput').value.toLowerCase().trim();
+      const filtered = currentUsers.filter(u => u.username.toLowerCase().includes(q));
+      renderUsers(filtered);
+    }
+
+    function openCreateUserModal() {
+      document.getElementById('newUsername').value = '';
+      openModal('modalCreateUser');
+    }
+
+    async function handleCreateUser(e) {
+      e.preventDefault();
+      const username = document.getElementById('newUsername').value.trim();
+      if (!username) return;
+
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          closeModal('modalCreateUser');
+          document.getElementById('successUsername').innerText = data.username;
+          document.getElementById('successKeyText').innerText = data.api_key;
+          openModal('modalKeySuccess');
+          loadDashboard();
+        } else {
+          showToast(data.detail || 'Lỗi tạo user!', 'error');
+        }
+      } catch (err) {
+        showToast('Lỗi máy chủ', 'error');
+      }
+    }
+
+    function openTopupModal(userId) {
+      const user = currentUsers.find(u => u.id === userId);
+      if (!user) return;
+      currentSelectedUser = user;
+      document.getElementById('topupUserId').value = user.id;
+      document.getElementById('topupTargetUsername').innerText = user.username;
+      document.getElementById('topupCurrentBalance').innerText = `${user.token_balance.toLocaleString()} token`;
+      document.getElementById('topupAmountInput').value = '';
+      document.getElementById('topupPreviewBalance').innerText = '--';
+      openModal('modalTopup');
+    }
+
+    function setTopupAmount(amount) {
+      document.getElementById('topupAmountInput').value = amount;
+      updateTopupPreview();
+    }
+
+    function updateTopupPreview() {
+      if (!currentSelectedUser) return;
+      const amt = parseInt(document.getElementById('topupAmountInput').value, 10) || 0;
+      const newBal = currentSelectedUser.token_balance + amt;
+      document.getElementById('topupPreviewBalance').innerText = `${newBal.toLocaleString()} token`;
+    }
+
+    async function handleTopupSubmit(e) {
+      e.preventDefault();
+      const uid = document.getElementById('topupUserId').value;
+      const amt = parseInt(document.getElementById('topupAmountInput').value, 10);
+      if (!amt || amt <= 0) return;
+
+      try {
+        const res = await fetch(`/api/admin/users/${uid}/topup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: amt })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          closeModal('modalTopup');
+          showToast(`Đã cộng ${amt.toLocaleString()} token cho ${data.username}!`);
+          loadDashboard();
+        } else {
+          showToast(data.detail || 'Lỗi nạp token', 'error');
+        }
+      } catch (err) {
+        showToast('Lỗi máy chủ', 'error');
+      }
+    }
+
+    async function toggleUserStatus(userId, currentStatus) {
+      const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+      const actionName = newStatus === 'suspended' ? 'tạm khoá' : 'mở lại';
+      if (!confirm(`Bạn có chắc muốn ${actionName} tài khoản này?`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+          showToast(`Đã ${actionName} tài khoản!`);
+          loadDashboard();
+        } else {
+          showToast('Lỗi cập nhật trạng thái', 'error');
+        }
+      } catch (e) {
+        showToast('Lỗi máy chủ', 'error');
+      }
+    }
+
+    // Upstream Settings
+    async function loadUpstreamSettings() {
+      try {
+        const res = await fetch('/api/admin/settings');
+        if (res.ok) {
+          const cfg = await res.json();
+          document.getElementById('inputUpstreamUrl').value = cfg.upstream_base_url;
+          document.getElementById('inputUpstreamKey').value = cfg.upstream_api_key || '';
+        }
+      } catch (e) {}
+    }
+
+    async function saveUpstreamSettings(e) {
+      e.preventDefault();
+      const url = document.getElementById('inputUpstreamUrl').value.trim();
+      const key = document.getElementById('inputUpstreamKey').value.trim();
+      const btn = document.getElementById('btnSaveUpstream');
+      btn.innerText = 'Đang lưu...';
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ upstream_base_url: url, upstream_api_key: key })
+        });
+        if (res.ok) {
+          showToast('Đã lưu cấu hình Upstream mới thành công!');
+          checkUpstreamQuick();
+        } else {
+          showToast('Lỗi lưu cấu hình', 'error');
+        }
+      } catch (err) {
+        showToast('Lỗi máy chủ', 'error');
+      } finally {
+        btn.innerText = 'Lưu Cấu Hình';
+      }
+    }
+
+    async function testUpstreamConnection() {
+      const box = document.getElementById('testResultBox');
+      const btn = document.getElementById('btnTestUpstream');
+      btn.innerText = '⏳ Đang ping Colab...';
+      box.classList.remove('hidden');
+      box.className = 'p-4 rounded-xl text-xs space-y-1 bg-slate-900 border border-slate-800 text-slate-300';
+      box.innerHTML = 'Đang gửi yêu cầu GET /models tới upstream ngrok...';
+
+      try {
+        const res = await fetch('/api/admin/settings/test-upstream', { method: 'POST' });
+        const d = await res.json();
+        if (d.status === 'ok') {
+          box.className = 'p-4 rounded-xl text-xs space-y-1 bg-emerald-950/40 border border-emerald-900/60 text-emerald-300';
+          box.innerHTML = `<strong>✅ ${escapeHtml(d.message)}</strong><br>Models: ${d.models ? d.models.join(', ') : 'OK'}`;
+          updateStatusBadge(true, `Colab Online (${d.latency_ms}ms)`);
+        } else {
+          box.className = 'p-4 rounded-xl text-xs space-y-1 bg-rose-950/40 border border-rose-900/60 text-rose-300';
+          box.innerHTML = `<strong>❌ ${escapeHtml(d.message)}</strong>`;
+          updateStatusBadge(false, 'Colab Offline');
+        }
+      } catch (err) {
+        box.className = 'p-4 rounded-xl text-xs space-y-1 bg-rose-950/40 border border-rose-900/60 text-rose-300';
+        box.innerHTML = '<strong>❌ Lỗi khi gửi request kiểm tra kết nối</strong>';
+        updateStatusBadge(false, 'Lỗi kết nối');
+      } finally {
+        btn.innerText = '⚡ Kiểm Tra Kết Nối Colab';
+      }
+    }
+
+    async function checkUpstreamQuick() {
+      try {
+        const res = await fetch('/api/admin/settings/test-upstream', { method: 'POST' });
+        const d = await res.json();
+        if (d.status === 'ok') {
+          updateStatusBadge(true, `Colab Online (${d.latency_ms}ms)`);
+        } else {
+          updateStatusBadge(false, 'Colab Offline');
+        }
+      } catch (e) {
+        updateStatusBadge(false, 'Colab Offline');
+      }
+    }
+
+    function updateStatusBadge(isOnline, text) {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      if (isOnline) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+        txt.className = "text-emerald-300 font-medium";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-rose-400";
+        txt.className = "text-rose-400 font-medium";
+      }
+      txt.innerText = text;
+    }
+
+    // Logs
+    async function loadLogs() {
+      const tbody = document.getElementById('logsTableBody');
+      try {
+        const res = await fetch('/api/admin/logs?limit=100');
+        if (res.ok) {
+          const logs = await res.json();
+          if (!logs || logs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500 font-sans text-xs">Chưa có request nào được ghi nhận.</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = logs.map(l => {
+            const isOk = l.status_code >= 200 && l.status_code < 300;
+            return `
+              <tr class="hover:bg-slate-900/40 transition">
+                <td class="py-2.5 px-4 text-slate-400">${l.created_at}</td>
+                <td class="py-2.5 px-4 font-sans font-semibold text-white">${escapeHtml(l.username)}</td>
+                <td class="py-2.5 px-4 text-indigo-300">${escapeHtml(l.model)}</td>
+                <td class="py-2.5 px-4 text-right text-slate-400">${l.prompt_tokens.toLocaleString()}</td>
+                <td class="py-2.5 px-4 text-right text-slate-400">${l.completion_tokens.toLocaleString()}</td>
+                <td class="py-2.5 px-4 text-right font-bold text-amber-400">${l.total_tokens.toLocaleString()}</td>
+                <td class="py-2.5 px-4 text-center">
+                  <span class="px-2 py-0.5 rounded text-[10px] ${isOk ? 'bg-emerald-950/80 text-emerald-300' : 'bg-rose-950/80 text-rose-300'}">
+                    ${l.status_code}
+                  </span>
+                </td>
+                <td class="py-2.5 px-4 text-right text-slate-500">${l.duration_ms}ms</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (e) {}
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    // On page load
+    checkAuth();
+  </script>
+</body>
+</html>

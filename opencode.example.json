@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "quan-net-ai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Quán Net AI (Colab llama.cpp)",
+      "options": {
+        "baseURL": "http://YOUR_GATEWAY_HOST:8000/v1",
+        "apiKey": "sk-user-DIEN_API_KEY_CUA_BAN_VAO_DAY"
+      },
+      "models": {
+        "default": {
+          "name": "Colab AI Model"
+        }
+      }
+    }
+  },
+  "model": "quan-net-ai/default"
+}
